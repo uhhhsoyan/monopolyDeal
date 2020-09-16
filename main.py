@@ -1,6 +1,6 @@
 
 from game import Game
-
+# Hey its david
 # Initialize game and deal cards
 g = Game()
 g.deck.shuffle()
