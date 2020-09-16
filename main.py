@@ -1,6 +1,7 @@
 
 from game import Game
-
+import django
+# Hey its david
 # Initialize game and deal cards
 g = Game()
 g.deck.shuffle()
