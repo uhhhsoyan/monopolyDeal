@@ -104,7 +104,8 @@ class Game:
                 return True
         return False
 
-    def get_user_input(self, prompt, return_type, accept_range=None):
+    def get_user_input(self, prompt, return_type, accept_range=None, special=None):
+        output = ''
         while True:
             if return_type == 'int':
                 try:
@@ -113,8 +114,8 @@ class Game:
                     print("Invalid input, please try again")
                     continue
             else:
-                output = input(prompt)
-            if accept_range is not None and output not in accept_range:
+                output = input(prompt).lower()
+            if accept_range is not None and output not in accept_range and output != special:
                 print("Invalid input, please try again")
                 continue
             else:
@@ -136,8 +137,7 @@ class Game:
             self.print_board()
             print(self.player_active.name + ', you have ' + str(plays_left) + ' plays left')
             play_idx = self.get_user_input('Enter the index of the card to play (99 to end turn early): ',
-                                           'int', range(len(self.player_active.hand)))
-            #play_idx = input('Enter the index of the card to play (99 to end turn early): ')
+                                           'int', range(len(self.player_active.hand)), 99)
             if play_idx == 99:
                 break
             self.play_card(self.player_active.hand[play_idx])
@@ -146,8 +146,9 @@ class Game:
 
     def end_turn(self):
         while len(self.player_active.hand) > 7:
-            discarded_card = self.player_active.hand[int(input("You have too many cards in your hand. Enter the index "
-                                                               "to be discarded: "))]
+            discard_idx = self.get_user_input('You have too many cards in your hand. Enter the index to be discarded: ',
+                                              'int', range(len(self.player_active.hand)))
+            discarded_card = self.player_active.hand[discard_idx]
             self.discard.append(discarded_card)
             self.player_active.hand.remove(discarded_card)
         # change the active player
@@ -177,8 +178,10 @@ class Game:
         else:
             # add input validation
             while True:
-                set_idx = input('Which property set? Enter index or \'n\' for new').lower()
-                if set_idx == 'n':
+                set_idx = self.get_user_input('Which property set? Enter index or 99 for new: ',
+                                              'int', range(len(self.player_active.properties)), 99)
+                if set_idx == 99:
+                    print("MADE IT HERE")
                     temp = PropertySet(properties=[], wild_properties=[])
                     if temp.add_card(card):  # check if able to add card to set
                         self.player_active.properties.append(temp)
@@ -187,7 +190,7 @@ class Game:
                         break
                     else:
                         continue
-                elif self.player_active.properties[int(set_idx)].add_card(card):
+                elif self.player_active.properties[set_idx].add_card(card):
                     break
                 else:
                     print('You selected an invalid property set')
@@ -230,20 +233,16 @@ class Game:
         return True
 
     def play_action_card(self, card):
-        while True:
-            bank_or_play = input('Bank or play this action card? Enter \'b\' for bank or \'p\' for play:').lower()
-            if bank_or_play not in ['b', 'p']:
-                print('Your entry was invalid. Please try again')
-                continue
-            else:
-                break
+        bank_or_play = self.get_user_input('Bank or play this action card? Enter \'b\' for bank or \'p\' for play: ',
+                                           'str', ['b', 'p'])
         if bank_or_play == 'b':
             self.player_active.bank.append(card)
             self.player_active.hand.remove(card)
         elif card.action == 'house' or card.action == 'hotel':
-            # add input validation
-            # stack_index = input('Which property set? Enter set index')
-            selected_set = self.player_active.properties[int(input('Which property set? Enter set index'))]
+            # update input validation - don't allow player to select play without at least one full set, non RR/utility
+            set_idx = self.get_user_input('Which property set? Enter set index: ',
+                                            'int', range(len(self.player_active.properties)))
+            selected_set = self.player_active.properties[set_idx]
             selected_set.add_house_hotel(card)
         elif card.action == 'pass go':
             self.discard.append(card)
