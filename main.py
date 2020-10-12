@@ -1,6 +1,6 @@
 
 from game import Game
-import django
+#import django
 # Hey its david
 # Initialize game and deal cards
 g = Game()

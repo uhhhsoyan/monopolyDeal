@@ -10,6 +10,7 @@ class Game:
         self.player_one = Player(name="Eric", hand=[], bank=[], properties=[])
         self.player_two = Player(name="Rach", hand=[], bank=[], properties=[])
         """
+        TESTING SETUP
         self.player_one = Player(
             name="Test John",
             hand=[
@@ -197,15 +198,17 @@ class Game:
                     continue
 
     def play_rent_card(self, card, doubler=False):
-        while True:
-            color_rent = input('Which color rent would you like to charge? ').lower()
-            if color_rent not in card.colors:
-                print('Your entry was invalid. Please try again')
-                continue
-            else:
-                # set_idx = int(input('Which property set would you like to charge rent on? Enter the index: '))
-                selected_set = self.player_active.properties[int(input('Which property set would you like to charge '
-                                                                       'rent on? Enter the index: '))]
+        bank_or_play = self.get_user_input('Bank or play? Enter \'b\' for bank or \'p\' for play: ',
+                                           'str', ['b', 'p'])
+        if bank_or_play == 'b':
+            self.player_active.bank.append(card)
+            self.player_active.hand.remove(card)
+        else:
+            color_rent = self.get_user_input('Which color: ', 'str', card.colors)
+            set_idx = self.get_user_input('Enter the index of the property set to charge rent on: ',
+                                          'int', range(len(self.player_active.properties)))
+            selected_set = self.player_active.properties[set_idx]
+            while True:
                 if selected_set.color == color_rent:
                     for p in self.players:
                         if p == self.player_active:
@@ -265,7 +268,8 @@ class Game:
             self.discard.append(card)
             self.player_active.hand.remove(card)
         elif card.action == 'debt collector':
-            player_selected = int(input('Which player would you like to collect from? Enter their index: '))
+            player_selected = self.get_user_input('Which player would you like to collect from? Enter their index: ',
+                                                  'int', len(range(self.players)))
             cards_received = self.players[player_selected].pay_up(5)
             for card in cards_received:
                 if isinstance(card, MoneyCard) or isinstance(card, ActionCard):
@@ -276,7 +280,25 @@ class Game:
             self.discard.append(card)
             self.player_active.hand.remove(card)
         elif card.action == 'sly deal':
-            # update logic
+            player_selected = self.players[self.get_user_input(
+                'Which player would you like to collect from? Enter their index: ',
+                'int',
+                range(len(self.players)))]
+            while True:
+                set_selected = player_selected.properties[self.get_user_input(
+                    'From which property set? Enter the index: ',
+                    'int',
+                    range(len(player_selected.properties)))]
+                if set_selected.is_full:
+                    continue
+                else:
+                    break
+            card_selected = set_selected.properties[self.get_user_input('Which card? Enter the index: ', 'int', )]
+            set_selected.properties.remove(card_selected)
+            print(self.player_active.name + ', you received ' + str(card))
+            # temporarily add card to hand - it will be removed immediately when played
+            self.player_active.hand.append(card_selected)
+            self.play_card(card_selected)
             self.discard.append(card)
             self.player_active.hand.remove(card)
         elif card.action == 'forced deal':
