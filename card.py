@@ -155,6 +155,7 @@ class Player:
         cards_paid = []
         while amount_owed > 0:
             if len(self.bank) == 0 and len(self.properties) == 0:
+                print('Sorry! ' + self.name + ' has nothing to pay with!')
                 amount_owed = 0
             else:
                 pay_method = input(self.name + ', you owe ' + str(amount_owed) + '. Would you like to pay from bank or '
